@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · Controle Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-head"><h1>{{ title }}</h1></div>
+
+<div class="card form-card">
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="field">
+      {{ form.name.label }}
+      {{ form.name(placeholder="Ex: Notebook novo, geladeira...") }}
+      {% for e in form.name.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field">
+      {{ form.estimated_cost.label }}
+      {{ form.estimated_cost(placeholder="0,00", step="0.01") }}
+      {% for e in form.estimated_cost.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field">
+      {{ form.priority.label }}
+      {{ form.priority() }}
+      <div class="field-hint">1 é o mais importante; a lista se organiza por aqui.</div>
+      {% for e in form.priority.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field">
+      {{ form.target_date.label }}
+      {{ form.target_date() }}
+      {% for e in form.target_date.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="form-actions">
+      {{ form.submit(class="btn btn-primary") }}
+      <a class="btn" href="{{ url_for('purchases.index') }}">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

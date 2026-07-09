@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "flask",
+      "runtimeExecutable": ".venv\\Scripts\\python.exe",
+      "runtimeArgs": ["-m", "flask", "--app", "wsgi.py", "run", "--port", "5001"],
+      "port": 5001
+    }
+  ]
+}

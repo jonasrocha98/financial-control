@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Compras futuras · Controle Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Compras futuras</h1>
+    <div class="sub">Organizadas por prioridade conforme sua sobra do mês</div>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('purchases.create') }}">{{ icon('plus') }} Nova compra</a>
+</div>
+
+<!-- Resumo da sobra -->
+<div class="hero">
+  <div class="flex-between">
+    <div>
+      <div class="label">Sobra para compras este mês</div>
+      <div class="big {{ 'negative' if plan.leftover < 0 }}">{{ plan.leftover | money }}</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="muted" style="font-size:.85rem;">Cabem agora</div>
+      <div style="font-size:1.6rem;font-weight:800;color:var(--accent);">{{ plan.affordable_count }}</div>
+      <div class="text-faint" style="font-size:.8rem;">de {{ plan.items|length }} pendentes</div>
+    </div>
+  </div>
+  {% if plan.items %}
+  <div class="progress" title="Quanto da sobra já está comprometido">
+    {% set used = (plan.leftover - plan.remaining) %}
+    {% set pct = (used / plan.leftover * 100) if plan.leftover > 0 else 0 %}
+    <span style="width: {{ [pct, 100] | min if pct > 0 else 0 }}%"></span>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Lista priorizada -->
+<div class="card" style="margin-top:18px;">
+  <div class="card-title">Lista priorizada</div>
+  {% if plan.items %}
+  <div class="list">
+    {% for item in plan.items %}
+    {% set p = item.purchase %}
+    <div class="list-row">
+      <div class="row-icon" style="{{ 'background:var(--accent-soft);color:var(--accent)' if item.fits }}">
+        {% if item.fits %}{{ icon('check') }}{% else %}{{ p.priority }}{% endif %}
+      </div>
+      <div class="grow">
+        <div class="title">{{ p.name }}</div>
+        <div class="sub">
+          <span class="badge prio-{{ p.priority }}">Prioridade {{ p.priority }}</span>
+          {% if p.target_date %}· até {{ p.target_date.strftime('%d/%m/%Y') }}{% endif %}
+          {% if item.fits %}
+            · <span style="color:var(--accent)">cabe na sobra ✓</span>
+          {% else %}
+            · <span style="color:var(--warning)">faltam {{ item.missing | money }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="amount">{{ p.estimated_cost | money }}</div>
+      <div class="row-actions">
+        <form method="post" action="{{ url_for('purchases.mark_bought', purchase_id=p.id) }}" title="Marcar como comprada">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn-ghost" style="color:var(--accent)">{{ icon('check') }}</button>
+        </form>
+        <a class="btn-ghost" href="{{ url_for('purchases.edit', purchase_id=p.id) }}" title="Editar">{{ icon('edit') }}</a>
+        <form method="post" action="{{ url_for('purchases.delete', purchase_id=p.id) }}" onsubmit="return confirm('Remover esta compra?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn-danger-ghost" title="Excluir">{{ icon('trash') }}</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><div class="ico">🎯</div>Sua lista está vazia. Adicione algo que você quer comprar.</div>
+  {% endif %}
+</div>
+
+<!-- Já compradas -->
+{% if bought %}
+<div class="card" style="margin-top:18px;">
+  <div class="card-title">Já compradas</div>
+  <div class="list">
+    {% for p in bought %}
+    <div class="list-row">
+      <div class="row-icon" style="background:var(--accent-soft);color:var(--accent)">{{ icon('check') }}</div>
+      <div class="grow">
+        <div class="title" style="text-decoration:line-through;opacity:.7">{{ p.name }}</div>
+      </div>
+      <div class="amount muted">{{ p.estimated_cost | money }}</div>
+      <div class="row-actions">
+        <form method="post" action="{{ url_for('purchases.reopen', purchase_id=p.id) }}" title="Voltar para a lista">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn-ghost btn-sm">Reabrir</button>
+        </form>
+        <form method="post" action="{{ url_for('purchases.delete', purchase_id=p.id) }}" onsubmit="return confirm('Remover?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn-danger-ghost" title="Excluir">{{ icon('trash') }}</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

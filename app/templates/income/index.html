@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Entradas · Controle Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Entradas</h1>
+    <div class="sub">Total cadastrado: <strong class="muted">{{ total | money }}</strong></div>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('income.create') }}">{{ icon('plus') }} Nova entrada</a>
+</div>
+
+<div class="card">
+  {% if incomes %}
+  <div class="list">
+    {% for i in incomes %}
+    <div class="list-row">
+      <div class="row-icon">{{ icon('income') }}</div>
+      <div class="grow">
+        <div class="title">{{ i.description }}</div>
+        <div class="sub">
+          {{ i.date.strftime('%d/%m/%Y') }} · {{ i.user.name.split(' ')[0] }}
+          {% if i.recurring %}<span class="badge muted">recorrente</span>{% endif %}
+        </div>
+      </div>
+      <div class="amount income">+{{ i.amount | money }}</div>
+      <div class="row-actions">
+        <a class="btn-ghost" href="{{ url_for('income.edit', income_id=i.id) }}" title="Editar">{{ icon('edit') }}</a>
+        <form method="post" action="{{ url_for('income.delete', income_id=i.id) }}" onsubmit="return confirm('Remover esta entrada?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn-danger-ghost" title="Excluir">{{ icon('trash') }}</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><div class="ico">💵</div>Nenhuma entrada ainda. Adicione seu salário ou outras receitas.</div>
+  {% endif %}
+</div>
+{% endblock %}

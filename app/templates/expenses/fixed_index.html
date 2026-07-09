@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Gastos fixos · Controle Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Gastos fixos</h1>
+    <div class="sub">Total ativo por mês: <strong class="muted">{{ total | money }}</strong></div>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('expenses.fixed_create') }}">{{ icon('plus') }} Novo fixo</a>
+</div>
+
+<div class="card">
+  {% if items %}
+  <div class="list">
+    {% for e in items %}
+    <div class="list-row">
+      <div class="row-icon">{{ icon('fixed') }}</div>
+      <div class="grow">
+        <div class="title">{{ e.name }} {% if not e.active %}<span class="badge muted">inativo</span>{% endif %}</div>
+        <div class="sub">
+          {% if e.category %}{{ e.category }}{% endif %}
+          {% if e.due_day %}· vence dia {{ e.due_day }}{% endif %}
+        </div>
+      </div>
+      <div class="amount expense">{{ e.amount | money }}</div>
+      <div class="row-actions">
+        <a class="btn-ghost" href="{{ url_for('expenses.fixed_edit', item_id=e.id) }}" title="Editar">{{ icon('edit') }}</a>
+        <form method="post" action="{{ url_for('expenses.fixed_delete', item_id=e.id) }}" onsubmit="return confirm('Remover este gasto fixo?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn-danger-ghost" title="Excluir">{{ icon('trash') }}</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><div class="ico">🏠</div>Nenhum gasto fixo. Cadastre aluguel, internet, assinaturas...</div>
+  {% endif %}
+</div>
+{% endblock %}

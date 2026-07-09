@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Entrar · Controle Financeiro{% endblock %}
+
+{% block auth_content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="brand"><span class="dot">$</span> Controle</div>
+    <h1>Bem-vindo de volta</h1>
+    <p class="sub">Entre para acompanhar o orçamento da casa</p>
+
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="field">
+        {{ form.email.label }}
+        {{ form.email(placeholder="voce@email.com") }}
+        {% for e in form.email.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="field">
+        {{ form.password.label }}
+        {{ form.password(placeholder="••••••••") }}
+        {% for e in form.password.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="field field-check">
+        {{ form.remember() }} {{ form.remember.label }}
+      </div>
+      {{ form.submit(class="btn btn-primary btn-block") }}
+    </form>
+
+    <div class="auth-foot">
+      Não tem conta? <a href="{{ url_for('auth.register') }}">Criar conta</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

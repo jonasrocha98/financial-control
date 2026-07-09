@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Controle Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Olá, {{ current_user.name.split(' ')[0] }} 👋</h1>
+    <div class="sub">Resumo de {{ month_name }} de {{ year }}</div>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('expenses.daily_create') }}">{{ icon('plus') }} Lançar gasto</a>
+</div>
+
+<!-- Hero: sobra do mês -->
+<div class="hero">
+  <div class="label">Sobra disponível este mês</div>
+  <div class="big {{ 'negative' if summary.leftover < 0 }}">{{ summary.leftover | money }}</div>
+  <div class="meta">
+    Entradas {{ summary.incomes | money }} − investir {{ summary.investment_reserve | money }}
+    − fixos {{ summary.fixed_total | money }} − dia a dia {{ summary.daily_total | money }}
+  </div>
+  {% if next_purchase %}
+  <div style="margin-top:14px;">
+    {% if next_purchase.fits %}
+      <span class="badge ok">{{ icon('check') }} Dá pra comprar agora: {{ next_purchase.purchase.name }}</span>
+    {% else %}
+      <span class="badge wait">Próxima meta: {{ next_purchase.purchase.name }} · faltam {{ next_purchase.missing | money }}</span>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Stats -->
+<div class="grid grid-stats" style="margin-top:18px;">
+  <div class="stat">
+    <div class="label">Entradas</div>
+    <div class="value income">{{ summary.incomes | money }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Reservado p/ investir</div>
+    <div class="value accent">{{ summary.investment_reserve | money }}</div>
+    <div class="meta">{{ summary.investment_pct }}% das entradas</div>
+  </div>
+  <div class="stat">
+    <div class="label">Gastos fixos</div>
+    <div class="value expense">{{ summary.fixed_total | money }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Gastos do dia a dia</div>
+    <div class="value expense">{{ summary.daily_total | money }}</div>
+  </div>
+</div>
+
+<!-- Gráficos -->
+<div class="grid grid-2" style="margin-top:18px;">
+  <div class="card">
+    <div class="card-title">Para onde vai o dinheiro</div>
+    <div class="chart-wrap"><canvas id="compositionChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Gastos do dia a dia por categoria</div>
+    {% if category_values %}
+      <div class="chart-wrap"><canvas id="categoryChart"></canvas></div>
+    {% else %}
+      <div class="empty"><div class="ico">📊</div>Sem gastos categorizados este mês.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  Chart.defaults.color = '#9aa3b2';
+  Chart.defaults.font.family = 'Inter, sans-serif';
+  const grid = 'rgba(255,255,255,0.05)';
+
+  new Chart(document.getElementById('compositionChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ composition['labels'] | tojson }},
+      datasets: [{
+        data: {{ composition['values'] | tojson }},
+        backgroundColor: ['#818cf8', '#f87171', '#fb923c', '#34d399'],
+        borderRadius: 8, borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { grid: { color: grid }, ticks: { callback: v => 'R$ ' + v } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  {% if category_values %}
+  new Chart(document.getElementById('categoryChart'), {
+    type: 'doughnut',
+    data: {
+      labels: {{ category_labels | tojson }},
+      datasets: [{
+        data: {{ category_values | tojson }},
+        backgroundColor: ['#34d399','#818cf8','#fb923c','#38bdf8','#f87171','#fbbf24','#a78bfa','#2dd4bf'],
+        borderColor: '#151922', borderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 12 } } }
+    }
+  });
+  {% endif %}
+</script>
+{% endblock %}

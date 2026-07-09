@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · Controle Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-head"><h1>{{ title }}</h1></div>
+
+<div class="card form-card">
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="field">
+      {{ form.description.label }}
+      {{ form.description(placeholder="Ex: Salário, freela, venda...") }}
+      {% for e in form.description.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field">
+      {{ form.amount.label }}
+      {{ form.amount(placeholder="0,00", step="0.01") }}
+      {% for e in form.amount.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field">
+      {{ form.date.label }}
+      {{ form.date() }}
+      {% for e in form.date.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field field-check">
+      {{ form.recurring() }} {{ form.recurring.label }}
+    </div>
+    <div class="form-actions">
+      {{ form.submit(class="btn btn-primary") }}
+      <a class="btn" href="{{ url_for('income.index') }}">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

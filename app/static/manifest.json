@@ -1,0 +1,12 @@
+{
+  "name": "Controle Financeiro",
+  "short_name": "Controle",
+  "description": "Controle financeiro da casa: gastos fixos, dia a dia, compras futuras e investimento.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0f14",
+  "theme_color": "#0d0f14",
+  "icons": [
+    { "src": "/static/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

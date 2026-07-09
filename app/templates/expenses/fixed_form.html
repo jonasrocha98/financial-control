@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · Controle Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-head"><h1>{{ title }}</h1></div>
+
+<div class="card form-card">
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="field">
+      {{ form.name.label }}
+      {{ form.name(placeholder="Ex: Aluguel, Internet, Netflix...") }}
+      {% for e in form.name.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field">
+      {{ form.amount.label }}
+      {{ form.amount(placeholder="0,00", step="0.01") }}
+      {% for e in form.amount.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field">
+      {{ form.due_day.label }}
+      {{ form.due_day(placeholder="Ex: 10") }}
+      {% for e in form.due_day.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field">
+      {{ form.category.label }}
+      {{ form.category(placeholder="Ex: Moradia, Lazer...") }}
+      {% for e in form.category.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field field-check">
+      {{ form.active() }} {{ form.active.label }}
+    </div>
+    <div class="form-actions">
+      {{ form.submit(class="btn btn-primary") }}
+      <a class="btn" href="{{ url_for('expenses.fixed_index') }}">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

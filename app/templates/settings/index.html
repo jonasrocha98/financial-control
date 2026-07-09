@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Configurações · Controle Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-head"><h1>Configurações</h1></div>
+
+<div class="grid grid-2">
+  <!-- Investimento -->
+  <div class="card">
+    <div class="card-title">Investimento mensal</div>
+    <p class="muted" style="margin-top:0;font-size:.88rem;">
+      Defina quanto das suas entradas deve ser separado para investir. Esse valor é descontado
+      automaticamente da sua sobra.
+    </p>
+    <form method="post" novalidate>
+      {{ inv_form.hidden_tag() }}
+      <div class="field">
+        {{ inv_form.percentage.label }}
+        {{ inv_form.percentage(step="0.5", min="0", max="100") }}
+        {% for e in inv_form.percentage.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      </div>
+      {{ inv_form.submit(class="btn btn-primary") }}
+    </form>
+  </div>
+
+  <!-- Casa / convite -->
+  <div class="card">
+    <div class="card-title">Sua casa</div>
+    <form method="post" novalidate>
+      {{ house_form.hidden_tag() }}
+      <div class="field">
+        {{ house_form.name.label }}
+        {{ house_form.name() }}
+        {% for e in house_form.name.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      </div>
+      {{ house_form.submit(class="btn btn-primary") }}
+    </form>
+
+    <div class="divider-text">convidar alguém</div>
+    <p class="muted" style="margin-top:0;font-size:.88rem;">
+      Compartilhe este código para a outra pessoa entrar na mesma casa ao criar a conta:
+    </p>
+    <div class="flex-between">
+      <span class="code-pill" id="invite">{{ household.invite_code }}</span>
+      <button class="btn btn-sm" type="button" onclick="copyCode()">Copiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Membros -->
+<div class="card" style="margin-top:18px;">
+  <div class="card-title">Pessoas nesta casa</div>
+  <div class="list">
+    {% for m in members %}
+    <div class="list-row">
+      <div class="row-icon">{{ m.name[0]|upper }}</div>
+      <div class="grow">
+        <div class="title">{{ m.name }} {% if m.id == current_user.id %}<span class="badge ok">você</span>{% endif %}</div>
+        <div class="sub">{{ m.email }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div style="margin-top:18px;">
+  <a class="btn" href="{{ url_for('auth.logout') }}">{{ icon('logout') }} Sair da conta</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function copyCode() {
+    navigator.clipboard.writeText(document.getElementById('invite').textContent.trim());
+  }
+</script>
+{% endblock %}

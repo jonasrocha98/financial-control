@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Dia a dia · Controle Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Gastos do dia a dia</h1>
+    <div class="sub">Este mês: <strong class="muted">{{ total | money }}</strong></div>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('expenses.daily_create') }}">{{ icon('plus') }} Novo gasto</a>
+</div>
+
+<div class="card">
+  {% if items %}
+  <div class="list">
+    {% for e in items %}
+    <div class="list-row">
+      <div class="row-icon">{{ icon('daily') }}</div>
+      <div class="grow">
+        <div class="title">{{ e.description }}</div>
+        <div class="sub">
+          {{ e.date.strftime('%d/%m') }} · {{ e.user.name.split(' ')[0] }}
+          {% if e.category %}· {{ e.category }}{% endif %}
+        </div>
+      </div>
+      <div class="amount expense">−{{ e.amount | money }}</div>
+      <div class="row-actions">
+        <a class="btn-ghost" href="{{ url_for('expenses.daily_edit', item_id=e.id) }}" title="Editar">{{ icon('edit') }}</a>
+        <form method="post" action="{{ url_for('expenses.daily_delete', item_id=e.id) }}" onsubmit="return confirm('Remover este gasto?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn-danger-ghost" title="Excluir">{{ icon('trash') }}</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><div class="ico">🛒</div>Nenhum gasto registrado este mês.</div>
+  {% endif %}
+</div>
+{% endblock %}

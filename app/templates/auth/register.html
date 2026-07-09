@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Criar conta · Controle Financeiro{% endblock %}
+
+{% block auth_content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="brand"><span class="dot">$</span> Controle</div>
+    <h1>Criar conta</h1>
+    <p class="sub">Crie uma casa nova ou entre na de alguém com um código</p>
+
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="field">
+        {{ form.name.label }}
+        {{ form.name(placeholder="Seu nome") }}
+        {% for e in form.name.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="field">
+        {{ form.email.label }}
+        {{ form.email(placeholder="voce@email.com") }}
+        {% for e in form.email.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="field">
+        {{ form.password.label }}
+        {{ form.password(placeholder="mínimo 6 caracteres") }}
+        {% for e in form.password.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="field">
+        {{ form.confirm.label }}
+        {{ form.confirm(placeholder="repita a senha") }}
+        {% for e in form.confirm.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="divider-text">dados da casa</div>
+
+      <div class="field">
+        {{ form.household_name.label }}
+        {{ form.household_name(placeholder="Ex: Casa do Jonas") }}
+        <div class="field-hint">Preencha para criar uma casa nova.</div>
+        {% for e in form.household_name.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="field">
+        {{ form.invite_code.label }}
+        {{ form.invite_code(placeholder="Ex: A3F9K2") }}
+        <div class="field-hint">Ou informe o código para entrar numa casa existente.</div>
+        {% for e in form.invite_code.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      </div>
+
+      {{ form.submit(class="btn btn-primary btn-block") }}
+    </form>
+
+    <div class="auth-foot">
+      Já tem conta? <a href="{{ url_for('auth.login') }}">Entrar</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
