@@ -32,27 +32,58 @@ PARCELA_RE = re.compile(r"\s*-?\s*Parcela\s+(\d+)/(\d+)\s*$", re.I)
 # Regras de classificação. A ORDEM IMPORTA: a primeira que casar vence.
 # destino: entrada | diario | fixo | ignorar
 # ---------------------------------------------------------------------------
+CPF_PROPRIO = r"784\.218"  # o CPF do titular, mascarado no OFX
+
 REGRAS: list[tuple[str, str, str, str, bool]] = [
     # (regex, destino, categoria, motivo, confianca_alta)
-    (r"pagamento de fatura|pagamento recebido", "ignorar", "", "fatura do cartão (as compras já entram uma a uma)", True),
-    (r"resgate rdb", "ignorar", "", "resgate da reserva RDB, não é receita", True),
-    (r"transfer.ncia enviada pelo pix - rodrigo rocha", "ignorar", "", "aluguel — cadastrado como GASTO FIXO", True),
+
+    # --- Movimentos que NÃO são receita nem despesa -------------------------
+    (r"pagamento de fatura|pagamento recebido", "ignorar", "",
+     "fatura do cartão (as compras já entram uma a uma)", True),
+    (r"resgate rdb", "ignorar", "",
+     "saque da caixinha: dinheiro já seu, não é receita", True),
+    (r"aplica..o rdb", "ignorar", "",
+     "depósito na caixinha: é poupança, não despesa", True),
     (r"cr.dito em conta", "ignorar", "", "cashback Nubank (estorno, não é renda)", True),
 
-    (r"transfer.ncia recebida - jonas rocha", "entrada", "Salário", "renda vinda da conta do Bradesco", True),
-    (r"transfer.ncia recebida pelo pix - carlos eduardo", "entrada", "Venda", "venda avulsa", True),
+    # --- Movimentos com as contas do próprio titular ------------------------
+    # A DIREÇÃO define a natureza: o que CHEGA do Bradesco é a renda dele;
+    # o que SAI para BIPA/Bradesco é poupança/investimento, não consumo.
+    (r"transfer.ncia recebida.*jonas rocha.*bradesco", "entrada", "Salário",
+     "renda vinda da conta do Bradesco (salário / férias)", True),
+    (rf"transfer.ncia enviada.*jonas rocha.*{CPF_PROPRIO}", "ignorar", "",
+     "aporte em conta/investimento seu (BIPA, Bradesco) — não é despesa", True),
 
-    (r"drogaria|drogal", "diario", "Farmácia", "", True),
+    # --- Gastos fixos -------------------------------------------------------
+    (r"transfer.ncia enviada pelo pix - rodrigo rocha", "fixo", "Aluguel",
+     "gasto fixo mensal", True),
+    (r"vero s\.a\.", "fixo", "Internet", "conta fixa mensal", True),
+
+    # --- Contas de consumo --------------------------------------------------
+    (r"elektro", "diario", "Energia", "conta de luz — candidata a gasto fixo", True),
+    (r"ultragaz", "diario", "Gás", "boleto recorrente", True),
+
+    # --- Categorias de comércio (a ordem importa) ---------------------------
+    (r"drogaria|drogal|droga centro|oficial farma", "diario", "Farmácia", "", True),
     (r"fraldas cia|balloonkids", "diario", "Filhos", "", True),
-    (r"supermercado|ki barato|varejao|casa de carnes|barreirense|hortiverde", "diario", "Mercado", "", True),
-    (r"posto ", "diario", "Combustível", "", True),
-    (r"pizzaria|beercordeiro", "diario", "Alimentação fora", "", True),
+    (r"supermercado|ki barato|varejao|casa de carnes|barreirense|hortiverde|atacadao",
+     "diario", "Mercado", "", True),
+    (r"posto |auto ban|allpark|nutag|99app", "diario", "Transporte", "", True),
+    (r"pizzaria|beercordeiro|burger|hamburgueria|churras|boteco|padaria|srbatata|"
+     r"bolos e salgados|doces caseiros|casa da pizza", "diario", "Alimentação fora", "", True),
     (r"recarga de celular|plano nucel", "diario", "Telefone", "", True),
-    (r"google|apple\.com|anthropic|iof de|nubank\+|nu seguro|amazon digital|nuuvem",
-     "diario", "Assinaturas", "", True),
-    (r"mercadolivre|mercado\*|blu \*br oticas|casa da costura", "diario", "Compras", "", True),
-    (r"vero s\.a\.|ultragaz", "diario", "Moradia", "boleto recorrente — avalie virar gasto fixo", False),
-    (r"transfer.ncia enviada pelo pix", "diario", "Transferência", "pix enviado — confirme o motivo", False),
+    (r"google|apple\.?com|anthropic|iof de|nubank\+|nu seguro|amazon digital|nuuvem|"
+     r"crunchyroll|capcut|blizzard|csgo-skins", "diario", "Assinaturas", "", True),
+    (r"mercadolivre|mercado\*|shopee|shein|aliexpress|amazon", "diario", "Compras online", "", True),
+    (r"blu \*br oticas|casa da costura|raros confeccoes|multi coisas|papelaria",
+     "diario", "Compras", "", True),
+    (r"clinica|estudio ", "diario", "Saúde", "confirme a categoria", False),
+
+    # --- Pix para pessoas: precisa da sua revisão ---------------------------
+    (r"transfer.ncia enviada pelo pix", "diario", "Transferência",
+     "pix enviado — confirme o motivo", False),
+    (r"transfer.ncia (recebida|Recebida)", "entrada", "",
+     "dinheiro recebido — é renda ou reembolso?", False),
 ]
 
 
