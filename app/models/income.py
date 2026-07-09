@@ -6,6 +6,9 @@ from ..extensions import db
 
 class Income(db.Model):
     __tablename__ = "incomes"
+    __table_args__ = (
+        db.UniqueConstraint("household_id", "external_key", name="uq_income_external_key"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     household_id = db.Column(db.Integer, db.ForeignKey("households.id"), nullable=False, index=True)
@@ -15,6 +18,9 @@ class Income(db.Model):
     amount = db.Column(db.Numeric(12, 2), nullable=False)
     date = db.Column(db.Date, nullable=False, default=date.today)
     recurring = db.Column(db.Boolean, nullable=False, default=False)
+
+    # Ver comentário em DailyExpense.external_key.
+    external_key = db.Column(db.String(64), nullable=True)
 
     household = db.relationship("Household", back_populates="incomes")
     user = db.relationship("User")
