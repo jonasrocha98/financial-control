@@ -1,18 +1,22 @@
 # Blueprint de deploy para o Render (https://render.com).
-# Crie um banco Postgres (na Supabase ou no próprio Render) e configure DATABASE_URL.
+#
+# IMPORTANTE: use um Postgres externo (Supabase / Neon). O Postgres gratuito do
+# próprio Render EXPIRA 30 dias após a criação e os dados são apagados.
 services:
   - type: web
     name: controle-financeiro
     runtime: python
     plan: free
     buildCommand: "pip install -r requirements.txt"
-    # Roda as migrations antes de iniciar e sobe o gunicorn
-    startCommand: "flask db upgrade && gunicorn wsgi:app"
+    # Aplica as migrations e sobe o gunicorn.
+    # O bind em $PORT é obrigatório: o Render injeta a porta e só considera o
+    # deploy saudável se o processo estiver escutando nela.
+    startCommand: "flask db upgrade && gunicorn wsgi:app --bind 0.0.0.0:$PORT"
     envVars:
       - key: FLASK_APP
         value: wsgi.py
       - key: FLASK_ENV
-        value: production
+        value: production   # ativa cookies Secure (o Render serve HTTPS)
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL

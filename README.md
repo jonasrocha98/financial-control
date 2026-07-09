@@ -76,18 +76,26 @@ alocação das compras por prioridade ([`tests/test_planner.py`](tests/test_plan
 
 ## ☁️ Deploy (Render + Supabase)
 
-1. **Banco (Supabase):** crie um projeto em [supabase.com](https://supabase.com), vá em
-   *Project Settings → Database → Connection string (URI)* e copie a string.
-2. **App (Render):** crie um *Web Service* apontando para este repositório. O
+1. **Banco (Supabase):** crie um projeto em [supabase.com](https://supabase.com), clique em
+   **Connect** no topo do painel e copie a string do **Session pooler**.
+
+   > ⚠️ **Use o Session pooler, não a "Direct connection".** A conexão direta da Supabase é
+   > IPv6-only e o Render não suporta IPv6 — a conexão direta falha. O Session pooler
+   > (host `...pooler.supabase.com`, porta 5432) é IPv4 e funciona.
+
+2. **App (Render):** crie um **Web Service** apontando para este repositório. O
    [`render.yaml`](render.yaml) já define build e start.
 3. No painel do Render, configure as variáveis de ambiente:
-   - `DATABASE_URL` → a connection string da Supabase
+   - `DATABASE_URL` → a string do Session pooler da Supabase
    - `SECRET_KEY` → gere uma (o `render.yaml` já pede para gerar)
    - `FLASK_ENV=production`
 4. O deploy roda `flask db upgrade` automaticamente e sobe o gunicorn.
 
-> A Supabase faz **backups automáticos** do Postgres — seus dados ficam guardados sem
-> esforço extra.
+> **Não use o Postgres gratuito do próprio Render:** ele expira 30 dias após a criação.
+> A Supabase faz backups automáticos e não expira.
+
+> **Plano free do Render hiberna** após 15 min sem tráfego; a primeira requisição depois
+> disso leva ~1 min para responder.
 
 ## 📁 Estrutura
 
