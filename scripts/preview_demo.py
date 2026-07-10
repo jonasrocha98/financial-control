@@ -85,6 +85,18 @@ def seed():
                                 amount=Decimal("793.60"), date=date(hoje.year, hoje.month, min(hoje.day, 9)),
                                 category="Mercado", source="cartao"))
 
+    from app.models import FuturePurchase
+    db.session.add_all([
+        FuturePurchase(household_id=casa.id, name="Notebook novo",
+                       estimated_cost=Decimal("3000"), installments=10, priority=1),
+        FuturePurchase(household_id=casa.id, name="Geladeira",
+                       estimated_cost=Decimal("2400"), installments=12, priority=2),
+        FuturePurchase(household_id=casa.id, name="Cadeira gamer",
+                       estimated_cost=Decimal("900"), installments=1, priority=3),
+        FuturePurchase(household_id=casa.id, name="Viagem",
+                       estimated_cost=Decimal("5000"), installments=1, priority=4),
+    ])
+
     ref = date(hoje.year, hoje.month, 1)
     db.session.add_all([
         Installment(household_id=casa.id, name="Óticas", amount=Decimal("100.50"),

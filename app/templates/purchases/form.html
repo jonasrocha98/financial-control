@@ -14,8 +14,16 @@
     </div>
     <div class="field">
       {{ form.estimated_cost.label }}
-      {{ form.estimated_cost(placeholder="0,00", step="0.01") }}
+      {{ form.estimated_cost(placeholder="0,00", step="0.01", id="custo") }}
       {% for e in form.estimated_cost.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field">
+      {{ form.installments.label }}
+      {{ form.installments(id="parcelas") }}
+      <div class="field-hint" id="previa">
+        Parcelado, o que pesa no seu mês é a parcela — não o valor total.
+      </div>
+      {% for e in form.installments.errors %}<div class="err">{{ e }}</div>{% endfor %}
     </div>
     <div class="field">
       {{ form.priority.label }}
@@ -34,4 +42,25 @@
     </div>
   </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Prévia do custo mensal enquanto você digita.
+  const custo = document.getElementById('custo');
+  const parcelas = document.getElementById('parcelas');
+  const previa = document.getElementById('previa');
+  const padrao = previa.textContent;
+
+  function atualizar() {
+    const total = parseFloat(custo.value);
+    const n = parseInt(parcelas.value, 10);
+    if (!total || !n || n < 2) { previa.textContent = padrao; return; }
+    const mensal = (total / n).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    previa.innerHTML = `<strong>${n}x de R$ ${mensal}</strong> — é isso que sai da sua sobra por mês.`;
+  }
+  custo.addEventListener('input', atualizar);
+  parcelas.addEventListener('change', atualizar);
+  atualizar();
+</script>
 {% endblock %}

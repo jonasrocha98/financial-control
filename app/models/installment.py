@@ -22,6 +22,10 @@ class Installment(db.Model):
     # mês a que 'current_installment' se refere (dia 1)
     reference_month = db.Column(db.Date, nullable=False)
 
+    # Origem, quando veio de uma compra futura marcada como comprada. NULL para
+    # as parcelas reconstruídas do extrato. Casar por nome seria frágil.
+    purchase_id = db.Column(db.Integer, db.ForeignKey("future_purchases.id"), nullable=True)
+
     household = db.relationship("Household", back_populates="installments")
 
     @property
