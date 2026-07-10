@@ -16,7 +16,16 @@ from pathlib import Path
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from ofx_to_planilha import EXTRATOS, PARCELA_RE, Trn, classificar, parse  # noqa: E402
+from ofx_to_planilha import (  # noqa: E402
+    EXTRATOS,
+    FIXO_MENSAL,
+    FIXOS,
+    PARCELA_RE,
+    Trn,
+    carrega_overrides,
+    classificar,
+    parse,
+)
 
 
 def brl(v) -> str:
@@ -37,6 +46,17 @@ def main():
         trns.extend(parse(f))
     for t in trns:
         classificar(t)
+
+    overrides = carrega_overrides()
+    for t in trns:
+        ov = overrides.get(t.external_key)
+        if ov:
+            t.destino, t.categoria = ov["destino"], ov["categoria"]
+
+    print("\nGASTOS FIXOS CANÔNICOS (aplicados a todo mês):")
+    for nome, v in FIXOS.items():
+        print(f"  {nome:16} R$ {brl(v):>9}")
+    print(f"  {'TOTAL':16} R$ {brl(FIXO_MENSAL):>9}")
 
     # Meses utilizáveis: precisam ter dados de conta corrente (receita) e cartão
     contas_por_mes = defaultdict(set)
@@ -71,9 +91,11 @@ def main():
                     rec += v
             elif "resgate rdb" in t.memo.lower():
                 resg += v
+        # fixo observado (soma dos lançamentos) x fixo canônico (o que de fato custa)
         linhas[m] = dict(entradas=ent, recorrente=rec, parcelas=parc,
-                         fixos=fix, resgates=resg,
-                         custo=fix + rec + parc, sobra=ent - fix - rec - parc)
+                         fixos=FIXO_MENSAL, fixos_obs=fix, resgates=resg,
+                         custo=FIXO_MENSAL + rec + parc,
+                         sobra=ent - FIXO_MENSAL - rec - parc)
 
     print()
     hdr = f"{'mês':9} {'entradas':>11} {'fixos':>9} {'recorrente':>11} {'parcelas':>10} {'sobra':>11} {'caixinha':>10}"

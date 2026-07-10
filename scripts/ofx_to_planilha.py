@@ -8,6 +8,7 @@ Uso: python scripts/ofx_to_planilha.py
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import sys
 from collections import defaultdict
@@ -34,6 +35,19 @@ PARCELA_RE = re.compile(r"\s*-?\s*Parcela\s+(\d+)/(\d+)\s*$", re.I)
 # ---------------------------------------------------------------------------
 CPF_PROPRIO = r"784\.218"  # o CPF do titular, mascarado no OFX
 
+# Gastos fixos canônicos: valor mensal que o app vai cadastrar como FixedExpense.
+# Usar um valor constante (e não a soma dos lançamentos do mês) evita que um mês
+# em que a cobrança não postou apareça com custo de vida artificialmente menor.
+FIXOS = {
+    "Aluguel": Decimal("604.00"),
+    "Serviço mensal (Anderson)": Decimal("140.00"),
+    "Internet": Decimal("90.00"),
+    "Streaming TV": Decimal("35.00"),
+    "Nubank+": Decimal("29.00"),
+    "Telefone": Decimal("10.00"),
+}
+FIXO_MENSAL = sum(FIXOS.values())  # R$ 908,00
+
 REGRAS: list[tuple[str, str, str, str, bool]] = [
     # (regex, destino, categoria, motivo, confianca_alta)
 
@@ -55,9 +69,22 @@ REGRAS: list[tuple[str, str, str, str, bool]] = [
      "aporte em conta/investimento seu (BIPA, Bradesco) — não é despesa", True),
 
     # --- Gastos fixos -------------------------------------------------------
+    # Estes lançamentos NÃO viram gasto do dia a dia: são representados por um
+    # FixedExpense (valor mensal constante). Importá-los também duplicaria.
     (r"transfer.ncia enviada pelo pix - rodrigo rocha", "fixo", "Aluguel",
      "gasto fixo mensal", True),
     (r"vero s\.a\.", "fixo", "Internet", "conta fixa mensal", True),
+    (r"transfer.ncia enviada.*webert", "fixo", "Streaming TV",
+     "streaming de TV, R$ 35/mês", True),
+    (r"transfer.ncia enviada.*anderson", "fixo", "Serviço mensal (Anderson)",
+     "R$ 140/mês, recorrente", True),
+    (r"nubank\+", "fixo", "Nubank+", "assinatura fixa", True),
+    (r"plano nucel", "fixo", "Telefone", "plano de celular", True),
+
+    # --- Gastos variáveis identificados pelo usuário ------------------------
+    (r"transfer.ncia enviada.*michelli", "diario", "Transferência",
+     "gasto variável (R$ 20 a R$ 323)", True),
+    (r"60108091carlos", "diario", "Cuidados pessoais", "barbeiro", True),
 
     # --- Contas de consumo --------------------------------------------------
     (r"elektro", "diario", "Energia", "conta de luz — candidata a gasto fixo", True),
@@ -79,12 +106,24 @@ REGRAS: list[tuple[str, str, str, str, bool]] = [
      "diario", "Compras", "", True),
     (r"clinica|estudio ", "diario", "Saúde", "confirme a categoria", False),
 
+    # --- Repasses: dinheiro que passa por você mas não é seu -----------------
+    (r"transfer.ncia recebida.*clerison", "ignorar", "",
+     "dinheiro do Clerison para você repassar — não é sua renda", True),
+
     # --- Pix para pessoas: precisa da sua revisão ---------------------------
     (r"transfer.ncia enviada pelo pix", "diario", "Transferência",
      "pix enviado — confirme o motivo", False),
     (r"transfer.ncia (recebida|Recebida)", "entrada", "",
      "dinheiro recebido — é renda ou reembolso?", False),
 ]
+
+
+def carrega_overrides() -> dict:
+    """Decisões manuais do usuário. Sempre vencem as regras automáticas."""
+    p = EXTRATOS / "overrides.json"
+    if not p.exists():
+        return {}
+    return json.loads(p.read_text("utf-8"))
 
 
 @dataclass
@@ -169,6 +208,21 @@ def main():
         trns.extend(parse(f))
     for t in trns:
         classificar(t)
+
+    # A revisão humana sobrepõe as regras
+    overrides = carrega_overrides()
+    aplicados = 0
+    for t in trns:
+        ov = overrides.get(t.external_key)
+        if ov:
+            t.destino = ov["destino"]
+            t.categoria = ov["categoria"]
+            t.motivo = "revisado por você"
+            t.confianca = "alta"
+            aplicados += 1
+    if overrides:
+        print(f"{aplicados}/{len(overrides)} overrides aplicados")
+
     trns.sort(key=lambda x: (x.data, x.conta))
 
     # Detecta colisão de external_key (não deveria haver nenhuma)
