@@ -27,3 +27,5 @@ Thumbs.db
 .vscode/
 .idea/
 extratos/
+# Banco do servidor de demonstracao (scripts/preview_demo.py)
+demo.db

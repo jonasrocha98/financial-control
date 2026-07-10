@@ -25,6 +25,18 @@ class DailyExpense(db.Model):
     # o Nubank reaproveita o mesmo FITID entre parcelas de meses diferentes.
     external_key = db.Column(db.String(64), nullable=True)
 
+    # 'conta' ou 'cartao'. Um gasto no cartão sai do bolso só no mês seguinte;
+    # sem isto não dá para calcular o caixa disponível hoje.
+    source = db.Column(db.String(10), nullable=True)
+
+    # "8/12" quando o gasto é parcela. Parcelas terminam; gasto recorrente não.
+    # Separá-las é o que torna o custo de vida honesto.
+    installment_info = db.Column(db.String(10), nullable=True)
+
+    @property
+    def is_installment(self) -> bool:
+        return bool(self.installment_info)
+
     household = db.relationship("Household", back_populates="daily_expenses")
     user = db.relationship("User")
 

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Quanto preciso faturar · Controle Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Quanto preciso faturar</h1>
+    <div class="sub">Baseado em {{ meta.meses_usados|length }} meses fechados: {{ meta.meses_usados|join(', ') }}</div>
+  </div>
+</div>
+
+{% if not meta.dados_suficientes %}
+  <div class="card">
+    <div class="empty">
+      <div class="ico">📉</div>
+      Precisa de pelo menos 2 meses fechados de lançamentos para calcular uma mediana confiável.
+    </div>
+  </div>
+{% else %}
+
+<!-- Hero: o gap -->
+<div class="hero">
+  {% if meta.no_azul %}
+    <div class="label">Você está no azul</div>
+    <div class="big">{{ (-meta.gap) | money }}</div>
+    <div class="meta">Sobra por mês acima do seu ponto de equilíbrio.</div>
+  {% else %}
+    <div class="label">Falta faturar por mês</div>
+    <div class="big negative">{{ meta.gap | money }}</div>
+    <div class="meta">
+      Ponto de equilíbrio {{ meta.ponto_equilibrio | money }} − sua renda {{ meta.renda_mediana | money }}
+      · ≈ {{ meta.gap_semanal | money }} por semana
+    </div>
+  {% endif %}
+</div>
+
+<!-- A conta -->
+<div class="grid grid-2" style="margin-top:18px;">
+  <div class="card">
+    <div class="card-title">De onde vem o número</div>
+    <div class="list">
+      <div class="list-row">
+        <div class="grow"><div class="title">Gastos fixos</div>
+          <div class="sub">aluguel, contas, assinaturas</div></div>
+        <div class="amount expense">{{ meta.fixo_mensal | money }}</div>
+      </div>
+      <div class="list-row">
+        <div class="grow"><div class="title">Gasto do dia a dia</div>
+          <div class="sub">mediana, sem as parcelas</div></div>
+        <div class="amount expense">{{ meta.recorrente_mediano | money }}</div>
+      </div>
+      <div class="list-row" style="border-top:1px solid var(--border-strong);">
+        <div class="grow"><div class="title"><strong>Custo de vida</strong></div>
+          <div class="sub">isto não acaba</div></div>
+        <div class="amount"><strong>{{ meta.custo_vida | money }}</strong></div>
+      </div>
+      {% if meta.parcelas.tem_parcelas %}
+      <div class="list-row">
+        <div class="grow"><div class="title">Parcelas</div>
+          <div class="sub">temporário — {{ meta.parcelas.ativas|length }} compras ativas</div></div>
+        <div class="amount expense">{{ meta.parcelas.comprometido_mensal | money }}</div>
+      </div>
+      {% endif %}
+      <div class="list-row" style="border-top:1px solid var(--border-strong);">
+        <div class="grow"><div class="title"><strong>Ponto de equilíbrio</strong></div></div>
+        <div class="amount accent"><strong>{{ meta.ponto_equilibrio | money }}</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Renda -->
+  <div class="card">
+    <div class="card-title">Sua renda hoje</div>
+    <div class="list">
+      <div class="list-row">
+        <div class="row-icon">{{ icon('income') }}</div>
+        <div class="grow"><div class="title">Salário</div><div class="sub">mediana mensal</div></div>
+        <div class="amount income">{{ meta.renda_salario | money }}</div>
+      </div>
+      <div class="list-row">
+        <div class="row-icon" style="background:rgba(129,140,248,.14);color:var(--accent-2)">↗</div>
+        <div class="grow">
+          <div class="title">Renda paralela</div>
+          <div class="sub">vendas e serviços · seu melhor mês: {{ meta.renda_paralela_pico | money }}</div>
+        </div>
+        <div class="amount income">{{ meta.renda_paralela | money }}</div>
+      </div>
+    </div>
+
+    {% if fator_paralela and meta.renda_paralela_pico > 0 %}
+    <div style="margin-top:16px;padding:14px;background:var(--bg);border-radius:var(--radius-sm);
+                border-left:3px solid var(--accent-2);">
+      <div style="font-weight:600;margin-bottom:5px;">O caminho mais curto</div>
+      <div class="muted" style="font-size:.88rem;line-height:1.55;">
+        Falta <strong>{{ meta.gap_sem_parcelas | money }}/mês</strong> depois que as parcelas quitarem.
+        Sua renda paralela mediana é {{ meta.renda_paralela | money }} — precisaria ser
+        <strong>{{ fator_paralela }}×</strong> maior.
+        {% if meta.renda_paralela_pico >= meta.gap_sem_parcelas %}
+          <br><span style="color:var(--accent)">Você já fez {{ meta.renda_paralela_pico | money }} num único mês.
+          Não falta o quê — falta consistência.</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Alívio das parcelas -->
+{% if meta.parcelas.alivios %}
+<div class="card" style="margin-top:18px;">
+  <div class="card-title">
+    Quando as parcelas liberam fôlego
+    <span class="badge">dívida restante {{ meta.parcelas.divida_restante | money }}</span>
+  </div>
+  <div class="list">
+    {% for a in meta.parcelas.alivios %}
+    <div class="list-row">
+      <div class="row-icon" style="background:var(--accent-soft);color:var(--accent)">{{ a.rotulo[:3] }}</div>
+      <div class="grow">
+        <div class="title">+{{ a.valor_liberado | money }}/mês em {{ a.rotulo }}</div>
+        <div class="sub">{{ a.compras | join(', ') }} · daqui a {{ a.meses_ate_la }} {{ 'mês' if a.meses_ate_la == 1 else 'meses' }}</div>
+      </div>
+      <div class="amount accent">{{ a.acumulado | money }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="field-hint" style="margin-top:12px;">
+    A coluna da direita é o acumulado. Quando a última quitar, seu ponto de equilíbrio cai
+    para <strong>{{ meta.custo_vida | money }}</strong> e o buraco vira
+    <strong>{{ meta.gap_sem_parcelas | money }}/mês</strong>.
+  </div>
+</div>
+{% endif %}
+
+<!-- Cenários de investimento -->
+<div class="card" style="margin-top:18px;">
+  <div class="card-title">E se você quiser investir também</div>
+  <p class="muted" style="margin-top:0;font-size:.88rem;">
+    O investimento sai <strong>por cima</strong> da renda, não do que sobra. Para investir 10% e ainda
+    cobrir o custo de vida, não basta ganhar 10% a mais: a conta é
+    <code>custo ÷ (1 − %)</code>.
+  </p>
+  <div class="list">
+    {% for c in cenarios %}
+    <div class="list-row">
+      <div class="row-icon">{{ c.pct | int }}%</div>
+      <div class="grow">
+        <div class="title">Faturar {{ c.renda_alvo | money }}</div>
+        <div class="sub">para investir {{ (meta.custo_vida * c.pct / (100 - c.pct)) | money }}/mês</div>
+      </div>
+      <div class="amount {{ 'expense' if c.falta > 0 else 'income' }}">
+        {{ '+' if c.falta > 0 }}{{ c.falta | money }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

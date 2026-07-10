@@ -6,7 +6,12 @@ from sqlalchemy import extract, func
 
 from ...extensions import db
 from ...models import DailyExpense, FuturePurchase
-from ...services.budget import compute_month_summary, current_year_month
+from ...services.budget import (
+    compute_cash_position,
+    compute_month_summary,
+    current_year_month,
+    month_progress,
+)
 from ...services.planner import plan_purchases
 from . import bp
 
@@ -21,6 +26,8 @@ MONTH_NAMES_PT = [
 def index():
     year, month = current_year_month()
     summary = compute_month_summary(current_user.household_id, year, month)
+    cash = compute_cash_position(current_user.household_id, year, month)
+    dias_passados, dias_totais = month_progress(year, month)
 
     # Gastos do dia a dia por categoria (para gráfico de rosca)
     rows = db.session.execute(
@@ -62,6 +69,10 @@ def index():
     return render_template(
         "dashboard/index.html",
         summary=summary,
+        cash=cash,
+        dias_passados=dias_passados,
+        dias_totais=dias_totais,
+        mes_em_curso=dias_passados < dias_totais,
         month_name=MONTH_NAMES_PT[month],
         year=year,
         category_labels=category_labels,

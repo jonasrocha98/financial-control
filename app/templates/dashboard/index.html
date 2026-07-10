@@ -10,14 +10,38 @@
   <a class="btn btn-primary" href="{{ url_for('expenses.daily_create') }}">{{ icon('plus') }} Lançar gasto</a>
 </div>
 
-<!-- Hero: sobra do mês -->
+<!-- Hero: sobra (competência) x caixa -->
 <div class="hero">
-  <div class="label">Sobra disponível este mês</div>
-  <div class="big {{ 'negative' if summary.leftover < 0 }}">{{ summary.leftover | money }}</div>
-  <div class="meta">
-    Entradas {{ summary.incomes | money }} − investir {{ summary.investment_reserve | money }}
-    − fixos {{ summary.fixed_total | money }} − dia a dia {{ summary.daily_total | money }}
+  <div class="hero-split">
+    <div>
+      <div class="label">Sobra do mês <span class="text-faint" style="font-weight:400">(o que você gastou)</span></div>
+      <div class="big {{ 'negative' if summary.leftover < 0 }}">{{ summary.leftover | money }}</div>
+      <div class="meta">
+        Entradas {{ summary.incomes | money }} − investir {{ summary.investment_reserve | money }}
+        − fixos {{ summary.fixed_total | money }} − dia a dia {{ summary.daily_total | money }}
+      </div>
+    </div>
+    <div>
+      <div class="label">Caixa <span class="text-faint" style="font-weight:400">(o que saiu da conta)</span></div>
+      <div class="big {{ 'negative' if cash.available < 0 }}">{{ cash.available | money }}</div>
+      <div class="meta">
+        Já descontada a fatura de {{ cash.last_month_card_bill | money }} do mês passado.
+        {% if cash.this_month_card > 0 %}
+          <br>Você tem <strong>{{ cash.this_month_card | money }}</strong> no cartão para pagar no mês que vem.
+        {% endif %}
+      </div>
+    </div>
   </div>
+
+  {% if mes_em_curso %}
+  <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border-strong);">
+    <span class="badge wait">
+      Mês em curso: dia {{ dias_passados }} de {{ dias_totais }} — faltam lançar
+      {{ dias_totais - dias_passados }} dias de gastos
+    </span>
+  </div>
+  {% endif %}
+
   {% if next_purchase %}
   <div style="margin-top:14px;">
     {% if next_purchase.fits %}

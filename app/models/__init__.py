@@ -6,6 +6,7 @@ from .fixed_expense import FixedExpense
 from .daily_expense import DailyExpense
 from .investment_config import InvestmentConfig
 from .future_purchase import FuturePurchase
+from .installment import Installment
 
 __all__ = [
     "Household",
@@ -15,4 +16,5 @@ __all__ = [
     "DailyExpense",
     "InvestmentConfig",
     "FuturePurchase",
+    "Installment",
 ]

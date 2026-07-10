@@ -35,6 +35,7 @@ def create_app(config_class=Config):
     from .blueprints.income import bp as income_bp
     from .blueprints.purchases import bp as purchases_bp
     from .blueprints.settings import bp as settings_bp
+    from .blueprints.target import bp as target_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -42,6 +43,7 @@ def create_app(config_class=Config):
     app.register_blueprint(income_bp)
     app.register_blueprint(purchases_bp)
     app.register_blueprint(settings_bp)
+    app.register_blueprint(target_bp)
 
     # Filtros de template
     from .utils import format_currency

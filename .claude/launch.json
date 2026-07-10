@@ -6,6 +6,12 @@
       "runtimeExecutable": ".venv\\Scripts\\python.exe",
       "runtimeArgs": ["-m", "flask", "--app", "wsgi.py", "run", "--port", "5001"],
       "port": 5001
+    },
+    {
+      "name": "demo",
+      "runtimeExecutable": ".venv\\Scripts\\python.exe",
+      "runtimeArgs": ["scripts/preview_demo.py"],
+      "port": 5002
     }
   ]
 }

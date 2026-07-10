@@ -23,6 +23,7 @@ class Household(db.Model):
     fixed_expenses = db.relationship("FixedExpense", back_populates="household", cascade="all, delete-orphan")
     daily_expenses = db.relationship("DailyExpense", back_populates="household", cascade="all, delete-orphan")
     purchases = db.relationship("FuturePurchase", back_populates="household", cascade="all, delete-orphan")
+    installments = db.relationship("Installment", back_populates="household", cascade="all, delete-orphan")
     investment_config = db.relationship(
         "InvestmentConfig", back_populates="household", uselist=False, cascade="all, delete-orphan"
     )

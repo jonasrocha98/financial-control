@@ -195,6 +195,24 @@ body::before {
 .hero .big.negative { color: var(--danger); }
 .hero .meta { color: var(--text-dim); font-size: 0.88rem; }
 
+/* Dois números lado a lado (sobra x caixa). No mobile empilha, e a divisória
+   passa de vertical para horizontal — senão fica uma borda solta na lateral. */
+.hero-split { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.hero-split > div + div {
+  border-left: 1px solid var(--border-strong);
+  padding-left: 24px;
+}
+.hero-split .big { font-size: 2.1rem; }
+@media (max-width: 760px) {
+  .hero-split { grid-template-columns: 1fr; gap: 18px; }
+  .hero-split > div + div {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid var(--border-strong);
+    padding-top: 18px;
+  }
+}
+
 /* ----------------------------------------------------------- Listas */
 .list { display: flex; flex-direction: column; }
 .list-row {
