@@ -11,7 +11,8 @@ services:
     # Aplica as migrations e sobe o gunicorn.
     # O bind em $PORT é obrigatório: o Render injeta a porta e só considera o
     # deploy saudável se o processo estiver escutando nela.
-    startCommand: "flask db upgrade && gunicorn wsgi:app --bind 0.0.0.0:$PORT"
+    # --app wsgi.py torna o comando independente da env var FLASK_APP.
+    startCommand: "flask --app wsgi.py db upgrade && gunicorn wsgi:app --bind 0.0.0.0:$PORT"
     envVars:
       - key: FLASK_APP
         value: wsgi.py

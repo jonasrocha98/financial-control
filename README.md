@@ -83,8 +83,20 @@ alocação das compras por prioridade ([`tests/test_planner.py`](tests/test_plan
    > IPv6-only e o Render não suporta IPv6 — a conexão direta falha. O Session pooler
    > (host `...pooler.supabase.com`, porta 5432) é IPv4 e funciona.
 
-2. **App (Render):** crie um **Web Service** apontando para este repositório. O
-   [`render.yaml`](render.yaml) já define build e start.
+2. **App (Render):** crie um **Web Service** apontando para este repositório.
+
+   > ⚠️ **Crie como Blueprint**, não pela UI comum. O [`render.yaml`](render.yaml) só é
+   > lido no modo Blueprint. Se você criar pela UI, o Render usa os padrões dele
+   > (`gunicorn app:app` e Python 3.14) e o deploy quebra, porque este projeto usa o
+   > padrão *app factory* — a instância WSGI vive em [`wsgi.py`](wsgi.py), não em `app`.
+   >
+   > Criando pela UI, ajuste manualmente em *Settings → Build & Deploy*:
+   > - **Build Command:** `pip install -r requirements.txt`
+   > - **Start Command:** `flask --app wsgi.py db upgrade && gunicorn wsgi:app --bind 0.0.0.0:$PORT`
+   >
+   > O bind em `$PORT` é obrigatório: o Render injeta a porta e só considera o serviço
+   > saudável se o processo estiver escutando nela.
+
 3. No painel do Render, configure as variáveis de ambiente:
    - `DATABASE_URL` → a string do Session pooler da Supabase
    - `SECRET_KEY` → gere uma (o `render.yaml` já pede para gerar)
