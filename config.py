@@ -9,12 +9,28 @@ load_dotenv(BASE_DIR / ".env")
 
 
 def _normalize_db_url(url: str) -> str:
-    """Garante o driver psycopg3 para URLs de Postgres (Supabase/Heroku usam 'postgres://')."""
+    """Garante o driver psycopg3 para URLs de Postgres (Supabase/Heroku usam 'postgres://').
+
+    Também remove espaços e quebras de linha que a colagem no painel de deploy
+    costuma introduzir e que truncariam o hostname silenciosamente.
+    """
+    url = "".join(url.split())
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql+psycopg://", 1)
     elif url.startswith("postgresql://"):
         url = url.replace("postgresql://", "postgresql+psycopg://", 1)
     return url
+
+
+def describe_db_target(uri: str) -> str:
+    """Descreve o destino do banco SEM expor a senha. Para log de diagnóstico."""
+    from urllib.parse import urlsplit
+
+    if uri.startswith("sqlite"):
+        return "SQLite local"
+    p = urlsplit(uri)
+    porta = f":{p.port}" if p.port else " (porta padrão)"
+    return f"{p.hostname}{porta}{p.path} como {p.username}"
 
 
 class Config:

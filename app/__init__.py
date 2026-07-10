@@ -1,13 +1,19 @@
 """Application factory."""
 from flask import Flask
 
-from config import Config
+from config import Config, describe_db_target
 from .extensions import csrf, db, login_manager, migrate
 
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    # Diagnóstico: um hostname errado na DATABASE_URL falha 100 linhas depois,
+    # dentro do driver. Dizer para onde estamos conectando encurta a caçada.
+    if not app.config.get("TESTING"):
+        alvo = describe_db_target(app.config["SQLALCHEMY_DATABASE_URI"])
+        print(f"[controle-financeiro] banco: {alvo}", flush=True)
 
     # Extensões
     db.init_app(app)
