@@ -42,11 +42,15 @@ FIXOS = {
     "Aluguel": Decimal("604.00"),
     "Aula de contrabaixo": Decimal("140.00"),
     "Internet": Decimal("90.00"),
+    # Energia é paga mês sim, mês não: R$ 50 é o custo MENSAL amortizado
+    # (R$ 256,31 em 6 meses), não o valor da conta.
+    "Energia": Decimal("50.00"),
+    "Gás": Decimal("50.00"),
     "Streaming TV": Decimal("35.00"),
     "Nubank+": Decimal("29.00"),
     "Telefone": Decimal("10.00"),
 }
-FIXO_MENSAL = sum(FIXOS.values())  # R$ 908,00
+FIXO_MENSAL = sum(FIXOS.values())  # R$ 1.008,00
 
 REGRAS: list[tuple[str, str, str, str, bool]] = [
     # (regex, destino, categoria, motivo, confianca_alta)
@@ -86,9 +90,9 @@ REGRAS: list[tuple[str, str, str, str, bool]] = [
      "gasto variável (R$ 20 a R$ 323)", True),
     (r"60108091carlos", "diario", "Cuidados pessoais", "barbeiro", True),
 
-    # --- Contas de consumo --------------------------------------------------
-    (r"elektro", "diario", "Energia", "conta de luz — candidata a gasto fixo", True),
-    (r"ultragaz", "diario", "Gás", "boleto recorrente", True),
+    # --- Contas de consumo (fixas: existem todo mês, apareçam ou não) -------
+    (r"elektro", "fixo", "Energia", "conta de luz, paga mês sim mês não", True),
+    (r"ultragaz", "fixo", "Gás", "boleto mensal", True),
 
     # --- Categorias de comércio (a ordem importa) ---------------------------
     (r"drogaria|drogal|droga centro|oficial farma", "diario", "Farmácia", "", True),

@@ -45,7 +45,7 @@ MAPA = [
     ("contrabaixo",          "fixo",    "Aula de contrabaixo"),
     ("internet",             "fixo",    "Internet"),
 
-    ("conta de gas",         "diario",  "Gás"),
+    ("conta de gas",         "fixo",    "Gás"),
     ("barbeiro",             "diario",  "Cuidados pessoais"),
     ("cartão da esposa",     "diario",  "Cartão da esposa"),
     ("cartão esposa",        "diario",  "Cartão da esposa"),
