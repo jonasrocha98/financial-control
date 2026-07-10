@@ -40,7 +40,7 @@ CPF_PROPRIO = r"784\.218"  # o CPF do titular, mascarado no OFX
 # em que a cobrança não postou apareça com custo de vida artificialmente menor.
 FIXOS = {
     "Aluguel": Decimal("604.00"),
-    "Serviço mensal (Anderson)": Decimal("140.00"),
+    "Aula de contrabaixo": Decimal("140.00"),
     "Internet": Decimal("90.00"),
     "Streaming TV": Decimal("35.00"),
     "Nubank+": Decimal("29.00"),
@@ -76,7 +76,7 @@ REGRAS: list[tuple[str, str, str, str, bool]] = [
     (r"vero s\.a\.", "fixo", "Internet", "conta fixa mensal", True),
     (r"transfer.ncia enviada.*webert", "fixo", "Streaming TV",
      "streaming de TV, R$ 35/mês", True),
-    (r"transfer.ncia enviada.*anderson", "fixo", "Serviço mensal (Anderson)",
+    (r"transfer.ncia enviada.*anderson", "fixo", "Aula de contrabaixo",
      "R$ 140/mês, recorrente", True),
     (r"nubank\+", "fixo", "Nubank+", "assinatura fixa", True),
     (r"plano nucel", "fixo", "Telefone", "plano de celular", True),

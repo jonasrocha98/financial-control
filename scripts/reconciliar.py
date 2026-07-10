@@ -17,7 +17,13 @@ from pathlib import Path
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from ofx_to_planilha import EXTRATOS, PARCELA_RE, classificar, parse  # noqa: E402
+from ofx_to_planilha import (  # noqa: E402
+    EXTRATOS,
+    PARCELA_RE,
+    carrega_overrides,
+    classificar,
+    parse,
+)
 
 JAN, JUN = "2026-01", "2026-06"
 
@@ -34,6 +40,14 @@ def main():
         trns.extend(parse(f))
     for t in trns:
         classificar(t)
+
+    # Sem isto, este script e a análise mensal discordam entre si.
+    overrides = carrega_overrides()
+    for t in trns:
+        ov = overrides.get(t.external_key)
+        if ov:
+            t.destino, t.categoria = ov["destino"], ov["categoria"]
+    print(f"({len(overrides)} overrides aplicados)\n")
 
     jan_jun = [t for t in trns if JAN <= t.data[:7] <= JUN]
 
@@ -108,16 +122,49 @@ def main():
             print(f"  {t.data}  R$ {brl(t.valor):>10}  {t.memo[:58]}")
     print(f"  TOTAL R$ {brl(tot)}")
 
-    # ---- 6. Fecha?
+    # ---- 6. Variação REAL da conta corrente (encadeando os extratos)
+    # abertura implícita = saldo final - soma das transações do mês
+    aberturas = {}
+    for f in sorted(EXTRATOS.glob("NU_*.ofx")):
+        txt = f.read_bytes().decode("utf-8", "replace")
+        m = re.search(r"<LEDGERBAL>.*?<BALAMT>(-?[\d.]+).*?<DTASOF>(\d{8})", txt, re.S)
+        if not m:
+            continue
+        fim, dt = Decimal(m.group(1)), m.group(2)
+        mes = f"{dt[:4]}-{dt[4:6]}"
+        aberturas[mes] = (fim - sum(t.valor for t in parse(f)), fim)
+
+    abre_jan = aberturas[JAN][0]
+    fecha_jun = aberturas[JUN][1]
+    delta_conta = fecha_jun - abre_jan
+
+    print("\n" + "=" * 70)
+    print("CONTA CORRENTE (cadeia dos extratos)")
+    print("=" * 70)
+    for mes in sorted(aberturas):
+        ab, fe = aberturas[mes]
+        print(f"  {mes}:  abre R$ {brl(ab):>9}  ->  fecha R$ {brl(fe):>9}")
+    print(f"\n  variação jan..jun   R$ {brl(delta_conta):>12}")
+
+    # ---- 7. Fecha?
+    #   sobra = Δconta + Δcaixinha + Δ(-dívida do cartão)
+    delta_divida = -(compras - pagtos)   # positivo = dívida caiu = patrimônio subiu
+    previsto = delta_conta + delta_caixinha + delta_divida
+    residuo = sobra - previsto
+
     print("\n" + "=" * 70)
     print("A CONTA FECHA?")
     print("=" * 70)
-    print(f"  sobra classificada             R$ {brl(sobra):>12}")
-    print(f"  variação da caixinha           R$ {brl(delta_caixinha):>12}")
-    print(f"  defasagem do cartão            R$ {brl(-(compras - pagtos)):>12}")
-    residuo = sobra - delta_caixinha + (compras - pagtos)
-    print(f"  {'-' * 46}")
-    print(f"  resíduo inexplicado           R$ {brl(residuo):>12}")
+    print(f"  sobra classificada            R$ {brl(sobra):>12}")
+    print(f"  {'-' * 45}")
+    print(f"  variação da conta corrente    R$ {brl(delta_conta):>12}")
+    print(f"  variação da caixinha          R$ {brl(delta_caixinha):>12}")
+    print(f"  abatimento da dívida          R$ {brl(delta_divida):>12}")
+    print(f"  = variação de patrimônio      R$ {brl(previsto):>12}")
+    print(f"  {'-' * 45}")
+    print(f"  RESÍDUO                       R$ {brl(residuo):>12}")
+    pct = abs(residuo) / entradas * 100 if entradas else 0
+    print(f"  ({pct:.1f}% das entradas do período)")
 
 
 if __name__ == "__main__":
